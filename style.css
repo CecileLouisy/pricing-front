@@ -34,37 +34,6 @@
   --shadow-elev:  0 8px 24px -6px rgba(20, 25, 40, 0.12);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --accent: #8ab0d4;
-    --accent-hover: #a1c1de;
-    --accent-soft: #1f2a3a;
-    --accent-ink: #0e1420;
-
-    --success: #7fbba8;
-    --success-soft: #1a2b28;
-    --danger: #c78475;
-    --danger-soft: #2c1e1b;
-
-    --bg: #131720;
-    --bg-elevated: #1a1f2b;
-    --bg-panel: #1e2431;
-    --bg-hover: #262d3d;
-    --bg-inset: #191e29;
-
-    --border: #2a3141;
-    --border-strong: #3a4256;
-
-    --ink: #e8ebf0;
-    --ink-soft: #c0c5d0;
-    --muted: #8891a3;
-
-    --focus: 0 0 0 3px rgba(138, 176, 212, 0.35);
-    --shadow-panel: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.25);
-    --shadow-elev:  0 8px 24px -6px rgba(0, 0, 0, 0.5);
-  }
-}
-
 :root[data-theme="dark"] {
   --accent: #8ab0d4;
   --accent-hover: #a1c1de;
@@ -215,13 +184,11 @@ body {
 .icon-btn:hover { background: var(--bg-hover); border-color: var(--border-strong); }
 .icon-btn:focus-visible { outline: none; box-shadow: var(--focus); }
 
+/* Icône affichée : lune quand thème clair (invite à passer en sombre), soleil quand thème sombre. */
 .theme-icon-light { display: none; }
-:root[data-theme="light"] .theme-icon-dark  { display: none; }
-:root[data-theme="light"] .theme-icon-light { display: inline; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .theme-icon-dark  { display: inline; }
-  :root:not([data-theme="light"]) .theme-icon-light { display: none; }
-}
+.theme-icon-dark  { display: inline; }
+:root[data-theme="dark"] .theme-icon-dark  { display: none; }
+:root[data-theme="dark"] .theme-icon-light { display: inline; }
 
 /* ================ TABS ================ */
 
