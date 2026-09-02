@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Grille tarifaire et simulateur de prix pour le parking municipal.">
+  <title>Pricing · Parking Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%233d5a80'/%3E%3Ctext x='16' y='24' font-family='Arial Black' font-size='22' text-anchor='middle' fill='%23ffffff' font-weight='900'%3EP%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+  <header class="masthead" role="banner">
+    <div class="masthead-inner">
+      <a href="#" class="brand" data-view-link="grille" aria-label="Accueil">
+        <span class="brand-badge" aria-hidden="true">P</span>
+        <span class="brand-text">
+          <span class="brand-name">Pricing</span>
+          <span class="brand-sub">Parking Management</span>
+        </span>
+      </a>
+      <div class="masthead-actions">
+        <span class="status" id="apiStatus" title="Statut de l'API">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span class="status-label">API…</span>
+        </span>
+        <button type="button" class="icon-btn" id="themeToggle" aria-label="Changer de thème">
+          <span class="theme-icon-dark" aria-hidden="true">☾</span>
+          <span class="theme-icon-light" aria-hidden="true">☀</span>
+        </button>
+      </div>
+    </div>
+
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <div class="tabs-inner">
+        <button class="tab" role="tab" data-view-link="grille" aria-selected="true">Grille</button>
+        <button class="tab" role="tab" data-view-link="simulateur">Simulateur</button>
+        <button class="tab" role="tab" data-view-link="admin">Administration</button>
+        <button class="tab" role="tab" data-view-link="docs">Documentation</button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+
+    <!-- ============ VUE GRILLE ============ -->
+    <section class="view" data-view="grille" hidden>
+      <div class="view-inner">
+        <div class="section-head">
+          <p class="eyebrow">Grille tarifaire · en vigueur</p>
+          <h1 class="display">Tarifs du parking</h1>
+          <p class="lede">Les tarifs affichés sont ceux de la grille active. Toute modification par l'administrateur crée une nouvelle version.</p>
+        </div>
+
+        <div class="grille-summary" id="grilleSummary">
+          <div class="summary-tile">
+            <p class="tile-label">Grille active</p>
+            <p class="tile-value" id="grilleVersion">—</p>
+          </div>
+          <div class="summary-tile">
+            <p class="tile-label">Gratuité initiale</p>
+            <p class="tile-value" id="grilleFreePeriod">—</p>
+            <p class="tile-note">walk-in uniquement</p>
+          </div>
+          <div class="summary-tile">
+            <p class="tile-label">En vigueur depuis</p>
+            <p class="tile-value" id="grilleSince">—</p>
+          </div>
+        </div>
+
+        <div class="board" role="table" aria-label="Grille tarifaire">
+          <div class="board-head" role="rowgroup">
+            <div class="board-row board-row-head" role="row">
+              <div class="board-cell board-cell-zone" role="columnheader">Zone</div>
+              <div class="board-cell board-cell-price" role="columnheader">Réservé <span class="price-hint">EUR / h</span></div>
+              <div class="board-cell board-cell-price" role="columnheader">Walk-in <span class="price-hint">EUR / h</span></div>
+            </div>
+          </div>
+          <div class="board-body" id="grilleBody" role="rowgroup">
+            <div class="loading">Chargement…</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VUE SIMULATEUR ============ -->
+    <section class="view" data-view="simulateur" hidden>
+      <div class="view-inner">
+        <div class="section-head">
+          <p class="eyebrow">Simulateur · calcul en temps réel</p>
+          <h1 class="display">Combien ça coûte ?</h1>
+          <p class="lede">Un calcul indicatif basé sur la grille active. Chaque devis est persisté et référence la version de grille utilisée.</p>
+        </div>
+
+        <div class="sim">
+          <form class="sim-form" id="simForm" novalidate>
+            <div class="field">
+              <label for="simZone">Zone</label>
+              <select id="simZone" name="zone" required>
+                <option value="">— choisir —</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Mode</label>
+              <div class="segmented" role="radiogroup" aria-label="Mode">
+                <label class="segment">
+                  <input type="radio" name="mode" value="walk_in" checked>
+                  <span>Walk-in</span>
+                </label>
+                <label class="segment">
+                  <input type="radio" name="mode" value="reserved">
+                  <span>Réservation</span>
+                </label>
+              </div>
+              <p class="field-hint" id="modeHint">Facturation au quart d'heure entamé, période de gratuité initiale déduite.</p>
+            </div>
+
+            <div class="field">
+              <span class="field-label">Durée</span>
+              <div class="duration-split duration-split-3">
+                <div class="duration-field">
+                  <input type="number" id="simDays" min="0" max="7" value="0" inputmode="numeric" aria-label="Jours">
+                  <span class="duration-unit">j</span>
+                </div>
+                <div class="duration-field">
+                  <input type="number" id="simHours" min="0" max="168" value="1" inputmode="numeric" aria-label="Heures">
+                  <span class="duration-unit">h</span>
+                </div>
+                <div class="duration-field">
+                  <input type="number" id="simMinutes" min="0" max="59" value="30" inputmode="numeric" aria-label="Minutes">
+                  <span class="duration-unit">min</span>
+                </div>
+              </div>
+              <p class="field-hint" id="durationHint">Max 7 jours.</p>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="simSubmit">Calculer</button>
+          </form>
+
+          <div class="sim-result" id="simResult" aria-live="polite">
+            <div class="ticket">
+              <div class="ticket-corner ticket-corner-tl"></div>
+              <div class="ticket-corner ticket-corner-tr"></div>
+              <div class="ticket-corner ticket-corner-bl"></div>
+              <div class="ticket-corner ticket-corner-br"></div>
+              <p class="ticket-eyebrow">Devis</p>
+              <p class="ticket-amount" id="ticketAmount">—</p>
+              <p class="ticket-currency">EUR</p>
+              <hr class="ticket-rule">
+              <dl class="ticket-details" id="ticketDetails">
+                <div class="ticket-row"><dt>Zone</dt><dd>—</dd></div>
+                <div class="ticket-row"><dt>Mode</dt><dd>—</dd></div>
+                <div class="ticket-row"><dt>Durée</dt><dd>—</dd></div>
+              </dl>
+              <p class="ticket-footer">
+                <span class="ticket-quote-id" id="ticketQuoteId">Aucun calcul lancé</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VUE ADMIN ============ -->
+    <section class="view" data-view="admin" hidden>
+      <div class="view-inner">
+        <div class="section-head">
+          <p class="eyebrow">Administration · zone protégée</p>
+          <h1 class="display">Console administrateur</h1>
+          <p class="lede">Modifiez la grille tarifaire. Chaque changement crée automatiquement une nouvelle version, sans jamais altérer les grilles historiques.</p>
+        </div>
+
+        <div class="admin-token">
+          <label for="adminToken">Jeton administrateur</label>
+          <div class="token-input">
+            <input type="password" id="adminToken" placeholder="X-Admin-Token" autocomplete="off">
+            <button type="button" class="btn btn-ghost" id="tokenClear">Effacer</button>
+          </div>
+          <p class="field-hint">Stocké localement dans votre navigateur. Envoyé uniquement à l'API sur les écritures.</p>
+        </div>
+
+        <div class="admin-grid">
+
+          <article class="card">
+            <h2>Modifier un tarif</h2>
+            <form id="updateRateForm" class="stack">
+              <div class="field">
+                <label for="updZone">Zone</label>
+                <select id="updZone" required></select>
+              </div>
+              <div class="field">
+                <label for="updMode">Mode</label>
+                <select id="updMode" required>
+                  <option value="walk_in">walk_in</option>
+                  <option value="reserved">reserved</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="updRate">Nouveau tarif (EUR / h)</label>
+                <input type="number" id="updRate" step="0.01" min="0.01" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Publier une nouvelle grille</button>
+            </form>
+          </article>
+
+          <article class="card">
+            <h2>Modifier la gratuité initiale</h2>
+            <form id="updateFreeForm" class="stack">
+              <div class="field">
+                <label for="updFree">Minutes gratuites (walk-in)</label>
+                <input type="number" id="updFree" min="0" max="180" required>
+                <p class="field-hint">Entre 0 et 180 minutes.</p>
+              </div>
+              <button type="submit" class="btn btn-primary">Publier</button>
+            </form>
+          </article>
+
+          <article class="card">
+            <h2>Ajouter une combinaison</h2>
+            <form id="createRateForm" class="stack">
+              <div class="field">
+                <label for="newZone">Zone</label>
+                <input type="text" id="newZone" placeholder="ex : premium" required>
+              </div>
+              <div class="field">
+                <label for="newMode">Mode</label>
+                <select id="newMode" required>
+                  <option value="walk_in">walk_in</option>
+                  <option value="reserved">reserved</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="newRate">Tarif (EUR / h)</label>
+                <input type="number" id="newRate" step="0.01" min="0.01" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Créer</button>
+            </form>
+          </article>
+
+          <article class="card card-wide">
+            <h2>Historique des grilles</h2>
+            <div class="table-wrap">
+              <table id="gridsTable">
+                <thead>
+                  <tr>
+                    <th>Version</th>
+                    <th>Statut</th>
+                    <th>Effective depuis</th>
+                    <th>Effective jusqu'à</th>
+                    <th>ID</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="card card-wide">
+            <h2>Retrouver un devis</h2>
+            <form id="lookupQuoteForm" class="inline-form">
+              <input type="text" id="lookupQuoteId" placeholder="quote_id (UUID)" required>
+              <button type="submit" class="btn btn-primary">Rechercher</button>
+            </form>
+            <pre class="pre-out" id="quoteLookupOut" aria-live="polite"></pre>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VUE DOCUMENTATION ============ -->
+    <section class="view" data-view="docs" hidden>
+      <div class="view-inner">
+        <div class="section-head">
+          <p class="eyebrow">Documentation · API</p>
+          <h1 class="display">Documentation de l'API</h1>
+          <p class="lede">Trois formats de documentation sont exposés directement par le service Pricing. Choisissez celui qui vous convient selon votre usage.</p>
+        </div>
+
+        <div class="api-url" aria-label="URL de l'API">
+          <span class="api-url-label">Base URL</span>
+          <a id="apiBaseLink" class="api-url-value" href="#" target="_blank" rel="noopener noreferrer">—</a>
+          <button type="button" class="btn btn-ghost btn-copy" id="apiUrlCopy" title="Copier">Copier</button>
+        </div>
+
+        <div class="docs-hero">
+          <div class="docs-hero-text">
+            <h2>Ouvrir Swagger UI</h2>
+            <p>Interface interactive pour tester chaque endpoint directement dans le navigateur — envoi de requêtes, visualisation des réponses, génération de curl.</p>
+          </div>
+          <a class="btn btn-primary btn-large" id="docsSwaggerBtn" href="#" target="_blank" rel="noopener noreferrer">
+            Ouvrir Swagger →
+          </a>
+        </div>
+
+        <div class="docs-cards">
+          <a class="doc-card" id="docsSwaggerCard" href="#" target="_blank" rel="noopener noreferrer">
+            <span class="doc-card-tag">Interactif</span>
+            <h3>Swagger UI</h3>
+            <p>Tester les endpoints depuis le navigateur, avec formulaires auto-générés et exemples de payload.</p>
+            <span class="doc-card-cta">/docs →</span>
+          </a>
+
+          <a class="doc-card" id="docsRedocCard" href="#" target="_blank" rel="noopener noreferrer">
+            <span class="doc-card-tag">Lecture</span>
+            <h3>ReDoc</h3>
+            <p>Documentation en lecture, mise en page plus aérée, adaptée à la consultation ou au partage.</p>
+            <span class="doc-card-cta">/redoc →</span>
+          </a>
+
+          <a class="doc-card" id="docsOpenapiCard" href="#" target="_blank" rel="noopener noreferrer">
+            <span class="doc-card-tag">Machine</span>
+            <h3>OpenAPI JSON</h3>
+            <p>Spécification OpenAPI 3 brute, importable dans Postman, Insomnia ou tout autre client HTTP.</p>
+            <span class="doc-card-cta">/openapi.json →</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <div class="foot-inner">
+      <p>Pricing · projet fil rouge Parking Management</p>
+    </div>
+  </footer>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>
