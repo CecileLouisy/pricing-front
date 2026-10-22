@@ -680,31 +680,64 @@ input[type="number"] { font-family: 'JetBrains Mono', monospace; font-variant-nu
 
 /* ================ ADMIN ================ */
 
-.admin-token {
-  background: var(--accent-soft);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: 8px;
-  padding: 20px 24px;
-  margin-bottom: 32px;
-}
-
-.admin-token label {
-  display: block;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 10px;
-}
-
-.token-input {
+.admin-session-bar {
   display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--success-soft);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--success);
+  border-radius: 8px;
+  padding: 12px 20px;
+  margin-bottom: 32px;
+  font-size: 14px;
+  color: var(--ink);
 }
-.token-input input { flex: 1; }
+
+.btn-sm {
+  padding: 4px 12px;
+  font-size: 13px;
+}
+
+/* Admin login dialog */
+.admin-dialog {
+  border: none;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 400px;
+  width: 90%;
+  background: var(--bg-panel);
+  color: var(--ink);
+  box-shadow: var(--shadow-elev);
+}
+.admin-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+.admin-dialog h2 {
+  margin: 0 0 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+}
+.admin-dialog p {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.admin-dialog .field {
+  margin-bottom: 20px;
+}
+.admin-dialog-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+#dialogError {
+  margin-top: 12px;
+  color: var(--danger);
+  font-size: 13px;
+}
 
 .admin-grid {
   display: grid;
