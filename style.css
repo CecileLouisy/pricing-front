@@ -64,7 +64,26 @@
 }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+/* ================ SKIP LINK ================ */
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 200;
+  padding: 12px 20px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.15s;
+}
+.skip-link:focus {
+  top: 0;
+}
 
 body {
   margin: 0;
@@ -388,6 +407,42 @@ body {
   color: var(--muted);
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-state {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.error-state p { margin: 0 0 12px; }
+
+.btn-retry {
+  font-size: 13px;
+  padding: 8px 16px;
+  color: var(--danger);
+  border-color: var(--danger);
+  background: transparent;
+}
+.btn-retry:hover {
+  background: var(--danger-soft);
 }
 
 /* ================ SIMULATEUR ================ */
@@ -1053,14 +1108,51 @@ tbody tr:hover { background: var(--bg-hover); }
 /* ================ MOBILE ================ */
 
 @media (max-width: 640px) {
-  .masthead-inner { padding: 14px 18px; }
-  .view-inner     { padding: 32px 18px 60px; }
-  .tabs-inner     { padding: 0 18px; }
-  .board-row      { padding: 14px 18px; grid-template-columns: 1.2fr 1fr 1fr; }
-  .board-cell-zone { font-size: 18px; }
-  .board-cell-price { font-size: 17px; }
-  .ticket-amount { font-size: 68px; }
-  .sim-form { padding: 24px; }
-  .card { padding: 20px; }
-  .docs-hero { padding: 28px; }
+  .masthead-inner { padding: 12px 16px; gap: 10px; }
+  .view-inner     { padding: 28px 16px 60px; }
+  .tabs-inner     { padding: 0 16px; }
+
+  .brand-badge   { width: 34px; height: 34px; font-size: 22px; }
+  .brand-name    { font-size: 18px; }
+  .brand-sub     { font-size: 9px; }
+  .brand         { gap: 10px; }
+
+  .status        { padding: 4px 8px; font-size: 10px; gap: 5px; }
+  .status-label  { display: none; }
+  .icon-btn      { width: 34px; height: 34px; font-size: 14px; }
+
+  .masthead-actions { gap: 8px; }
+
+  .tab           { padding: 12px 14px; font-size: 13px; }
+
+  .display       { font-size: clamp(32px, 8vw, 40px); }
+  .lede          { font-size: 15px; }
+
+  .grille-summary { grid-template-columns: 1fr; }
+
+  .board-row      { padding: 12px 14px; grid-template-columns: 1.2fr 1fr 1fr; }
+  .board-cell-zone { font-size: 16px; }
+  .board-cell-price { font-size: 15px; }
+  .zone-icon      { font-size: 16px; min-width: 20px; }
+
+  .ticket-amount { font-size: 60px; }
+  .ticket        { padding: 32px 20px 24px; }
+  .sim-form      { padding: 20px; gap: 20px; }
+
+  .card { padding: 18px; }
+  .admin-grid { grid-template-columns: 1fr; }
+  .admin-session-bar { flex-direction: column; gap: 8px; text-align: center; }
+
+  .admin-dialog { padding: 24px; width: 95%; }
+
+  .docs-cards { grid-template-columns: 1fr; }
+  .docs-hero  { padding: 24px; }
+
+  .inline-form { flex-direction: column; }
+  .inline-form input { width: 100%; }
+
+  .toast-stack { left: 16px; right: 16px; bottom: 16px; }
+  .toast { min-width: unset; max-width: unset; }
+
+  .api-url { padding: 10px 14px; gap: 8px; font-size: 12px; }
 }
