@@ -146,11 +146,19 @@ async function checkHealth() {
 
 function showView(name) {
   $$(".view").forEach(v => v.hidden = v.dataset.view !== name);
-  $$(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.viewLink === name ? "true" : "false"));
+  $$(".tab").forEach(t => {
+    const selected = t.dataset.viewLink === name;
+    t.setAttribute("aria-selected", selected ? "true" : "false");
+    t.setAttribute("tabindex", selected ? "0" : "-1");
+  });
   if (name === "grille")     loadGrilleView();
   if (name === "simulateur") loadSimZones();
   if (name === "admin")      loadAdminView();
   if (name === "docs")       loadDocsView();
+
+  const heading = $(".view:not([hidden]) .display");
+  if (heading) heading.setAttribute("tabindex", "-1");
+  requestAnimationFrame(() => heading?.focus({ preventScroll: true }));
 }
 
 function initRouter() {
@@ -160,6 +168,27 @@ function initRouter() {
     e.preventDefault();
     showView(link.dataset.viewLink);
   });
+
+  $(".tabs").addEventListener("keydown", (e) => {
+    const tabs = $$(".tab:not([hidden])", $(".tabs"));
+    const current = tabs.findIndex(t => t.getAttribute("aria-selected") === "true");
+    let next = -1;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      next = (current + 1) % tabs.length;
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      next = (current - 1 + tabs.length) % tabs.length;
+    } else if (e.key === "Home") {
+      next = 0;
+    } else if (e.key === "End") {
+      next = tabs.length - 1;
+    }
+    if (next >= 0) {
+      e.preventDefault();
+      tabs[next].focus();
+      showView(tabs[next].dataset.viewLink);
+    }
+  });
+
   showView("grille");
 }
 
@@ -169,7 +198,7 @@ let CURRENT_GRID = null;
 
 async function loadGrilleView() {
   const body = $("#grilleBody");
-  body.innerHTML = `<div class="loading">Chargement…</div>`;
+  body.innerHTML = `<div class="loading"><span class="loading-spinner"></span>Chargement…</div>`;
   try {
     const grid = await api.currentGrid();
     CURRENT_GRID = grid;
@@ -208,7 +237,10 @@ async function loadGrilleView() {
       </div>
     `).join("");
   } catch (err) {
-    body.innerHTML = `<div class="empty">Impossible de charger la grille : ${err.message}</div>`;
+    body.innerHTML = `<div class="error-state">
+      <p>Impossible de charger la grille : ${err.message}</p>
+      <button type="button" class="btn btn-retry" onclick="loadGrilleView()">Réessayer</button>
+    </div>`;
   }
 }
 
@@ -217,6 +249,8 @@ async function loadGrilleView() {
 async function loadSimZones() {
   const sel = $("#simZone");
   if (sel.dataset.loaded === "1") return;
+  sel.innerHTML = `<option value="">Chargement…</option>`;
+  sel.disabled = true;
   try {
     if (!CURRENT_GRID) CURRENT_GRID = await api.currentGrid();
     const zones = [...new Set(CURRENT_GRID.rates.map(r => r.zone))].sort();
@@ -224,7 +258,10 @@ async function loadSimZones() {
       zones.map(z => `<option value="${z}">${zoneIcon(z)}  ${zoneLabel(z)}</option>`).join("");
     sel.dataset.loaded = "1";
   } catch (err) {
+    sel.innerHTML = `<option value="">Erreur de chargement</option>`;
     toastErr(`Zones : ${err.message}`);
+  } finally {
+    sel.disabled = false;
   }
 }
 
@@ -276,7 +313,7 @@ async function submitSim(e) {
   }
 
   btn.disabled = true;
-  btn.textContent = "Calcul…";
+  btn.innerHTML = `<span class="loading-spinner"></span>Calcul…`;
   try {
     const quote = await api.computeQuote({ zone, mode, duration_min });
     renderTicket(quote);
@@ -348,9 +385,14 @@ function initAdminLogin() {
     tokenInput.value = "";
     errorMsg.hidden = true;
     dialog.showModal();
+    tokenInput.focus();
   });
 
   $("#dialogCancel").addEventListener("click", () => dialog.close());
+
+  dialog.addEventListener("close", () => {
+    $("#adminLoginBtn").focus();
+  });
 
   dialog.querySelector("form").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -389,9 +431,13 @@ async function loadAdminView() {
 
 async function refreshGridsTable() {
   const tbody = $("#gridsTable tbody");
-  tbody.innerHTML = `<tr><td colspan="5" class="loading">Chargement…</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="5" class="loading"><span class="loading-spinner"></span>Chargement…</td></tr>`;
   try {
     const grids = await api.listGrids();
+    if (grids.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty">Aucune grille.</td></tr>`;
+      return;
+    }
     tbody.innerHTML = grids.map(g => `
       <tr>
         <td>v${g.version}</td>
@@ -404,7 +450,7 @@ async function refreshGridsTable() {
       </tr>
     `).join("");
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty">${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="error-state">${err.message}<br><button type="button" class="btn btn-retry" onclick="refreshGridsTable()">Réessayer</button></td></tr>`;
   }
 }
 
