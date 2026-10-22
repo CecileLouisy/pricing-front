@@ -51,10 +51,19 @@ Puis http://localhost:5500.
 - **HTML/CSS/JS vanilla** — zéro dépendance, zéro build, zéro `node_modules`.
 - **Design bleu ardoise** — palette `#3d5a80` (light) / `#8ab0d4` (dark), typographie **Bebas Neue** (titres) + **DM Sans** (corps) + **JetBrains Mono** (chiffres). Contrastes AA+ garantis.
 - **Thème clair par défaut**, toggle clair/sombre disponible.
+- **Responsive mobile** — mise en page adaptée aux écrans ≤ 640 px : header compact, cartes empilées, toasts pleine largeur, formulaires en colonne.
 - **Ticket UI** — le résultat du simulateur s'affiche comme un vrai ticket de stationnement, coins découpés compris.
 - **Health check** en continu (toutes les 30 s) avec indicateur visuel.
+- **États de chargement / erreur** — spinners animés pendant les appels API, messages d'erreur avec bouton « Réessayer » sur la grille et l'historique.
 - **Toasts** pour les erreurs et succès (auto-disparition).
 - **Jeton admin persisté dans `localStorage`** — reste privé au navigateur.
+
+## Accessibilité
+
+- **Skip-to-content** — lien d'accès rapide au contenu principal, visible au premier Tab.
+- **Navigation clavier** — flèches gauche/droite pour parcourir les onglets (Home / End pour premier / dernier), roving `tabindex`.
+- **Focus management** — le focus est placé sur le titre de la vue au changement d'onglet ; retour du focus sur le bouton 🔒 à la fermeture du dialog.
+- **ARIA** — `aria-describedby` sur les champs avec indications, `aria-labelledby` sur le dialog et les groupes radio, `role="alert"` sur les messages d'erreur, `role="group"` sur les champs de durée.
 
 ## Sécurité
 
