@@ -27,6 +27,9 @@
           <span class="status-dot" aria-hidden="true"></span>
           <span class="status-label">API…</span>
         </span>
+        <button type="button" class="icon-btn" id="adminLoginBtn" aria-label="Connexion administrateur" title="Admin">
+          <span aria-hidden="true">🔒</span>
+        </button>
         <button type="button" class="icon-btn" id="themeToggle" aria-label="Changer de thème">
           <span class="theme-icon-dark" aria-hidden="true">☾</span>
           <span class="theme-icon-light" aria-hidden="true">☀</span>
@@ -38,7 +41,7 @@
       <div class="tabs-inner">
         <button class="tab" role="tab" data-view-link="grille" aria-selected="true">Grille</button>
         <button class="tab" role="tab" data-view-link="simulateur">Simulateur</button>
-        <button class="tab" role="tab" data-view-link="admin">Administration</button>
+        <button class="tab tab-admin" role="tab" data-view-link="admin" hidden>Administration</button>
         <button class="tab" role="tab" data-view-link="docs">Documentation</button>
       </div>
     </nav>
@@ -174,13 +177,9 @@
           <p class="lede">Modifiez la grille tarifaire. Chaque changement crée automatiquement une nouvelle version, sans jamais altérer les grilles historiques.</p>
         </div>
 
-        <div class="admin-token">
-          <label for="adminToken">Jeton administrateur</label>
-          <div class="token-input">
-            <input type="password" id="adminToken" placeholder="X-Admin-Token" autocomplete="off">
-            <button type="button" class="btn btn-ghost" id="tokenClear">Effacer</button>
-          </div>
-          <p class="field-hint">Stocké localement dans votre navigateur. Envoyé uniquement à l'API sur les écritures.</p>
+        <div class="admin-session-bar">
+          <span>Connecté en tant qu'administrateur</span>
+          <button type="button" class="btn btn-ghost btn-sm" id="adminLogout">Déconnexion</button>
         </div>
 
         <div class="admin-grid">
@@ -319,6 +318,22 @@
       <p>Pricing · projet fil rouge Parking Management</p>
     </div>
   </footer>
+
+  <dialog class="admin-dialog" id="adminDialog">
+    <form method="dialog" class="admin-dialog-form">
+      <h2>Connexion administrateur</h2>
+      <p>Entrez le jeton pour accéder à la console d'administration.</p>
+      <div class="field">
+        <label for="dialogToken">X-Admin-Token</label>
+        <input type="password" id="dialogToken" placeholder="Votre jeton" autocomplete="off" required>
+      </div>
+      <div class="admin-dialog-actions">
+        <button type="button" class="btn btn-ghost" id="dialogCancel">Annuler</button>
+        <button type="submit" class="btn btn-primary" id="dialogConnect">Se connecter</button>
+      </div>
+      <p class="field-hint" id="dialogError" hidden></p>
+    </form>
+  </dialog>
 
   <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 

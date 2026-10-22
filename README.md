@@ -2,11 +2,12 @@
 
 Front-end vanilla (HTML/CSS/JS) pour le service **Pricing** du projet fil rouge de gestion de parking.
 
-Trois vues :
+Quatre vues :
 
-1. **Grille** — affiche les tarifs actifs par zone × mode + la gratuité initiale (user story "panneau d'affichage").
+1. **Grille** — affiche les tarifs actifs par zone × mode + la gratuité initiale.
 2. **Simulateur** — calcule un prix pour une zone, un mode et une durée, avec détail du calcul.
-3. **Administration** — modifie les tarifs et la gratuité (protégé par jeton `X-Admin-Token`), consulte l'historique des grilles et retrouve un ancien devis.
+3. **Administration** — modifie les tarifs et la gratuité, consulte l'historique des grilles et retrouve un ancien devis. Visible uniquement après connexion admin (🔒).
+4. **Documentation** — liens vers Swagger UI, ReDoc et OpenAPI JSON.
 
 ## API cible
 
@@ -48,8 +49,8 @@ Puis http://localhost:5500.
 ## Stack et parti pris
 
 - **HTML/CSS/JS vanilla** — zéro dépendance, zéro build, zéro `node_modules`.
-- **Design "signalétique parking"** — palette jaune signalétique (`#F5C518`) + noir asphalte + bleu signalisation, typographie **Bebas Neue** (grand format panneau) + **DM Sans** (corps) + **JetBrains Mono** (chiffres).
-- **Thème sombre par défaut** (choix éditorial cohérent avec l'affichage borne / panneau), toggle clair/sombre disponible, respecte `prefers-color-scheme`.
+- **Design bleu ardoise** — palette `#3d5a80` (light) / `#8ab0d4` (dark), typographie **Bebas Neue** (titres) + **DM Sans** (corps) + **JetBrains Mono** (chiffres). Contrastes AA+ garantis.
+- **Thème clair par défaut**, toggle clair/sombre disponible.
 - **Ticket UI** — le résultat du simulateur s'affiche comme un vrai ticket de stationnement, coins découpés compris.
 - **Health check** en continu (toutes les 30 s) avec indicateur visuel.
 - **Toasts** pour les erreurs et succès (auto-disparition).
@@ -57,15 +58,17 @@ Puis http://localhost:5500.
 
 ## Sécurité
 
-- Le jeton admin n'est jamais envoyé au serveur des tuiles GitHub Pages : il est stocké dans `localStorage` et envoyé uniquement à l'API Render sur les écritures.
-- L'API Pricing exige CORS-safe origins ; le repo Render est configuré avec `CORS_ORIGINS=*` pour l'exercice.
+- L'onglet Administration est **masqué par défaut**. Il n'apparaît qu'après saisie d'un jeton via le bouton 🔒.
+- Si un appel admin retourne 401, le jeton est automatiquement effacé et l'onglet admin est masqué.
+- Le jeton n'est jamais envoyé au serveur GitHub Pages : il est stocké dans `localStorage` et envoyé uniquement à l'API Render dans le header `X-Admin-Token`.
+- L'API Pricing est configurée avec `CORS_ORIGINS` restreint au domaine GitHub Pages.
 - Aucune donnée sensible n'est manipulée (pas de plaque, pas de nom, pas de paiement).
 
 ## Structure
 
 ```
 pricing-front/
-├── index.html      Structure des 3 vues + header/footer
+├── index.html      Structure des 4 vues + header/footer + dialog admin
 ├── style.css       Palette, typographie, mise en page
 ├── app.js          Router de tabs, client API, formulaires, toasts
 ├── .gitignore

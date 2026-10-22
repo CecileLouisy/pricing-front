@@ -103,6 +103,11 @@ const api = {
       const err = new Error(msg);
       err.code = data?.code || data?.detail?.code || "HTTP_ERROR";
       err.status = res.status;
+      if (res.status === 401 && admin) {
+        localStorage.removeItem("adminToken");
+        updateAdminUI();
+        toastErr("Jeton invalide — déconnexion.");
+      }
       throw err;
     }
     return data;
@@ -306,12 +311,70 @@ function renderTicket(quote) {
   $("#ticketQuoteId").textContent = `Devis ${quote.quote_id}`;
 }
 
+// ---------- Admin auth ----------
+
+function isAdminLoggedIn() {
+  return !!localStorage.getItem("adminToken");
+}
+
+function updateAdminUI() {
+  const tab = $(".tab-admin");
+  const lockBtn = $("#adminLoginBtn");
+  if (isAdminLoggedIn()) {
+    tab.hidden = false;
+    lockBtn.innerHTML = `<span aria-hidden="true">🔓</span>`;
+    lockBtn.title = "Admin connecté";
+  } else {
+    tab.hidden = true;
+    lockBtn.innerHTML = `<span aria-hidden="true">🔒</span>`;
+    lockBtn.title = "Admin";
+    const currentView = $(".view:not([hidden])");
+    if (currentView?.dataset.view === "admin") showView("grille");
+  }
+}
+
+function initAdminLogin() {
+  const dialog = $("#adminDialog");
+  const tokenInput = $("#dialogToken");
+  const errorMsg = $("#dialogError");
+
+  $("#adminLoginBtn").addEventListener("click", () => {
+    if (isAdminLoggedIn()) {
+      localStorage.removeItem("adminToken");
+      updateAdminUI();
+      toastOk("Déconnexion admin.");
+      return;
+    }
+    tokenInput.value = "";
+    errorMsg.hidden = true;
+    dialog.showModal();
+  });
+
+  $("#dialogCancel").addEventListener("click", () => dialog.close());
+
+  dialog.querySelector("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const token = tokenInput.value.trim();
+    if (!token) return;
+    errorMsg.hidden = true;
+
+    localStorage.setItem("adminToken", token);
+    dialog.close();
+    updateAdminUI();
+    toastOk("Jeton enregistré. Il sera vérifié à la prochaine action admin.");
+  });
+
+  $("#adminLogout").addEventListener("click", () => {
+    localStorage.removeItem("adminToken");
+    updateAdminUI();
+    showView("grille");
+    toastOk("Déconnexion admin.");
+  });
+}
+
 // ---------- Vue Admin ----------
 
 async function loadAdminView() {
-  const tokenInput = $("#adminToken");
-  tokenInput.value = localStorage.getItem("adminToken") || "";
-
   try {
     if (!CURRENT_GRID) CURRENT_GRID = await api.currentGrid();
     const zones = [...new Set(CURRENT_GRID.rates.map(r => r.zone))].sort();
@@ -346,16 +409,6 @@ async function refreshGridsTable() {
 }
 
 function initAdminForms() {
-  $("#adminToken").addEventListener("input", (e) => {
-    localStorage.setItem("adminToken", e.target.value);
-  });
-
-  $("#tokenClear").addEventListener("click", () => {
-    $("#adminToken").value = "";
-    localStorage.removeItem("adminToken");
-    toastOk("Jeton effacé.");
-  });
-
   $("#updateRateForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const zone = $("#updZone").value;
@@ -479,8 +532,10 @@ function initTheme() {
 document.addEventListener("DOMContentLoaded", () => {
   initTheme();
   initRouter();
+  initAdminLogin();
   initAdminForms();
   initDocsCopy();
+  updateAdminUI();
   $("#simForm").addEventListener("submit", submitSim);
   $$('input[name="mode"]').forEach(r => r.addEventListener("change", updateSimHints));
   updateSimHints();
