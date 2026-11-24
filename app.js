@@ -9,18 +9,20 @@ const API_URL = "https://pricing-9khk.onrender.com";
 const ZONE_ICONS = {
   standard:   "🚗",
   xl:         "🚛",
-  disabled:   "♿",
+  handicapped: "♿",
   electric:   "⚡",
   two_wheels: "🏍️",
 };
 
+// Key order is also the display order of the zones.
 const ZONE_LABELS = {
   standard:   "Standard",
-  xl:         "XL",
-  disabled:   "Handicapé",
+  handicapped: "PMR",
   electric:   "Électrique",
-  two_wheels: "2 roues",
+  xl:         "XL",
+  two_wheels: "Deux-roues",
 };
+const ZONE_ORDER = Object.keys(ZONE_LABELS);
 
 const MODE_LABELS = {
   walk_in:  "Walk-in",
@@ -59,6 +61,17 @@ function formatDate(iso) {
 
 function zoneIcon(zone)  { return ZONE_ICONS[zone]  ?? "•"; }
 function zoneLabel(zone) { return ZONE_LABELS[zone] ?? zone; }
+
+// Known zones in ZONE_ORDER, then zones created by an admin, alphabetically.
+function zonesOf(rates) {
+  const rank = (z) => (ZONE_ORDER.includes(z) ? ZONE_ORDER.indexOf(z) : ZONE_ORDER.length);
+  return [...new Set(rates.map(r => r.zone))]
+    .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+}
+
+function zoneOptions(zones) {
+  return zones.map(z => `<option value="${z}">${zoneLabel(z)}</option>`).join("");
+}
 function modeLabel(mode) { return MODE_LABELS[mode] ?? mode; }
 
 // ---------- Toast ----------
@@ -207,9 +220,8 @@ async function loadGrilleView() {
     $("#grilleFreePeriod").textContent = `${grid.free_period_min} min`;
     $("#grilleSince").textContent      = formatDate(grid.effective_from);
 
-    const byZone = new Map();
+    const byZone = new Map(zonesOf(grid.rates).map(z => [z, { reserved: null, walk_in: null }]));
     for (const r of grid.rates) {
-      if (!byZone.has(r.zone)) byZone.set(r.zone, { reserved: null, walk_in: null });
       byZone.get(r.zone)[r.mode] = r.hourly_rate_eur;
     }
 
@@ -253,7 +265,7 @@ async function loadSimZones() {
   sel.disabled = true;
   try {
     if (!CURRENT_GRID) CURRENT_GRID = await api.currentGrid();
-    const zones = [...new Set(CURRENT_GRID.rates.map(r => r.zone))].sort();
+    const zones = zonesOf(CURRENT_GRID.rates);
     sel.innerHTML = `<option value="">— choisir —</option>` +
       zones.map(z => `<option value="${z}">${zoneIcon(z)}  ${zoneLabel(z)}</option>`).join("");
     sel.dataset.loaded = "1";
@@ -419,8 +431,7 @@ function initAdminLogin() {
 async function loadAdminView() {
   try {
     if (!CURRENT_GRID) CURRENT_GRID = await api.currentGrid();
-    const zones = [...new Set(CURRENT_GRID.rates.map(r => r.zone))].sort();
-    $("#updZone").innerHTML = zones.map(z => `<option value="${z}">${z}</option>`).join("");
+    $("#updZone").innerHTML = zoneOptions(zonesOf(CURRENT_GRID.rates));
     $("#updFree").value = CURRENT_GRID.free_period_min;
   } catch (err) {
     toastErr(err.message);
@@ -501,8 +512,7 @@ function initAdminForms() {
       $("#newZone").value = "";
       $("#newRate").value = "";
       await refreshGridsTable();
-      const zones = [...new Set(g.rates.map(r => r.zone))].sort();
-      $("#updZone").innerHTML = zones.map(z => `<option value="${z}">${z}</option>`).join("");
+      $("#updZone").innerHTML = zoneOptions(zonesOf(g.rates));
     } catch (err) {
       toastErr(`${err.code || "ERR"} : ${err.message}`);
     }
