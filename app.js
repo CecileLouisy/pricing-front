@@ -131,8 +131,10 @@ const api = {
   listGrids:       ()               => api.request("/grids"),
   listRates:       ()               => api.request("/rates"),
   freePeriod:      ()               => api.request("/settings/free-period"),
-  computeQuote:    (body)           => api.request("/quote",             { method: "POST", body }),
-  getQuote:        (id)             => api.request(`/quotes/${id}`),
+  // Public simulation: same computation as a quote, nothing is stored.
+  simulate:        (body)           => api.request("/simulate",          { method: "POST", body }),
+  // Quotes belong to Booking and Access; the admin console reads them with the admin token.
+  getQuote:        (id)             => api.request(`/quotes/${id}`,      { admin: true }),
   updateRate:      (zone, mode, b)  => api.request(`/rates/${zone}/${mode}`, { method: "PATCH", body: b, admin: true }),
   createRate:      (body)           => api.request("/rates",             { method: "POST", body, admin: true }),
   updateFreePeriod:(body)           => api.request("/settings/free-period", { method: "PATCH", body, admin: true }),
@@ -327,9 +329,9 @@ async function submitSim(e) {
   btn.disabled = true;
   btn.innerHTML = `<span class="loading-spinner"></span>Calcul…`;
   try {
-    const quote = await api.computeQuote({ zone, mode, duration_min });
-    renderTicket(quote);
-    toastOk(`Devis émis pour ${formatEUR(quote.amount_eur)} €`);
+    const simulation = await api.simulate({ zone, mode, duration_min });
+    renderTicket(simulation);
+    toastOk(`Prix estimé : ${formatEUR(simulation.amount_eur)} €`);
   } catch (err) {
     toastErr(`${err.code || "ERR"} : ${err.message}`);
   } finally {
@@ -338,10 +340,10 @@ async function submitSim(e) {
   }
 }
 
-function renderTicket(quote) {
-  $("#ticketAmount").textContent = formatEUR(quote.amount_eur);
+function renderTicket(simulation) {
+  $("#ticketAmount").textContent = formatEUR(simulation.amount_eur);
   const details = $("#ticketDetails");
-  const b = quote.breakdown || {};
+  const b = simulation.breakdown || {};
   const rows = [
     ["Zone",           `${zoneIcon(b.zone)} ${zoneLabel(b.zone)}`],
     ["Mode",           modeLabel(b.mode)],
@@ -352,12 +354,12 @@ function renderTicket(quote) {
   if (b.quarters != null)         rows.push(["Quarts d'h",    b.quarters]);
   if (b.hours != null)            rows.push(["Heures",        b.hours]);
   if (b.hourly_rate_eur != null)  rows.push(["Tarif horaire", `${formatEUR(b.hourly_rate_eur)} €`]);
-  rows.push(["Grille",            `v${quote.grid_version ?? "?"}`]);
+  rows.push(["Grille",            `v${simulation.grid_version ?? "?"}`]);
 
   details.innerHTML = rows
     .map(([dt, dd]) => `<div class="ticket-row"><dt>${dt}</dt><dd>${dd}</dd></div>`)
     .join("");
-  $("#ticketQuoteId").textContent = `Devis ${quote.quote_id}`;
+  $("#ticketQuoteId").textContent = "Simulation indicative, non enregistrée";
 }
 
 // ---------- Admin auth ----------

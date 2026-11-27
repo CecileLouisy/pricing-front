@@ -5,8 +5,8 @@ Front-end vanilla (HTML/CSS/JS) pour le service **Pricing** du projet fil rouge 
 Quatre vues :
 
 1. **Grille** — affiche les tarifs actifs par zone × mode + la gratuité initiale.
-2. **Simulateur** — calcule un prix pour une zone, un mode et une durée, avec détail du calcul.
-3. **Administration** — modifie les tarifs et la gratuité, consulte l'historique des grilles et retrouve un ancien devis. Visible uniquement après connexion admin (🔒).
+2. **Simulateur** — calcule un prix pour une zone, un mode et une durée, avec détail du calcul. Il appelle `POST /simulate`, public : le calcul est le même que pour un devis, mais rien n'est enregistré (les devis enregistrés sont réservés à Booking et Access, avec leur clé API).
+3. **Administration** — modifie les tarifs et la gratuité, consulte l'historique des grilles et retrouve un ancien devis (`GET /quotes/{id}` avec le jeton admin). Visible uniquement après connexion admin (🔒).
 4. **Documentation** — liens vers Swagger UI, ReDoc et OpenAPI JSON.
 
 ## API cible
